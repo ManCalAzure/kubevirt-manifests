@@ -1,0 +1,56 @@
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vsrx-cloudinit
+spec:
+  running: True
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: vsrx-cloudinit
+    spec:
+      domain:
+        ioThreadsPolicy: auto
+        cpu:
+          sockets: 1
+          cores: 4
+          threads: 1
+        resources:
+          requests:
+            memory: 8Gi
+            cpu: "4"
+          limits:
+            cpu: "4"
+            memory: 8Gi
+        devices:
+          useVirtioTransitional: true
+          disks:
+            - name: boot
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: fxp
+              bridge: {}
+            - name: left
+              bridge: {}
+            - name: right
+              bridge: {}
+      volumes:
+        - name: boot
+          dataVolume:
+            name: vsrx-boot
+      networks:
+        - name: default
+          pod: {}
+        - name: fxp
+          multus:
+            networkName: fxp
+        - name: left
+          multus:
+            networkName: left
+        - name: right
+          multus:
+            networkName: right
