@@ -1,0 +1,21 @@
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: sriovnet-right
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: intel.com/intel_sriov_dpdk
+spec:
+  config: '{
+  "type": "sriov",
+  "cniVersion": "0.3.1",
+  "name": "sriovnet-right",
+  "vlan": 1002,
+  "ipam": {
+    "type": "host-local",
+    "subnet": "1.12.1.0/24",
+    "routes": [{
+      "dst": "0.0.0.0/0"
+    }],
+    "gateway": "1.12.1.1"
+  }
+}'

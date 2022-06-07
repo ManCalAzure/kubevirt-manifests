@@ -1,0 +1,58 @@
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vsrx-sriov
+spec:
+  running: True
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: vsrx-sriov
+    spec:
+      domain:
+        cpu:
+          sockets: 1
+          cores: 4
+          threads: 1
+        resources:
+          requests:
+            memory: 8Gi
+            cpu: "4"
+          limits:
+            cpu: "4"
+            memory: 8Gi
+        devices:
+          useVirtioTransitional: true
+          disks:
+            - name: boot
+              disk:
+                bus: virtio
+            - name: config
+              cdrom:
+                readonly: true
+          interfaces:
+            - name: fxp
+              sriov: {}
+            - name: left
+              sriov: {}
+            - name: right
+              sriov: {}
+      volumes:
+        - name: boot
+          dataVolume:
+            name: vsrx-sriov
+        - name: config
+          containerDisk:
+            image: aprabh/vsrx:configpath
+            path: /configpath/config.iso
+      networks:
+        - name: fxp
+          multus:
+            networkName: sriovnet-fxp
+        - name: left
+          multus:
+            networkName: sriovnet-left
+        - name: right
+          multus:
+            networkName: sriovnet-right
