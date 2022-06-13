@@ -1,0 +1,4 @@
+#cloud-config
+password: Embe1mpls
+chpasswd: { expire: False }
+ssh_pwauth: False

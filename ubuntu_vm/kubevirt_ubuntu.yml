@@ -1,0 +1,62 @@
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: ubuntu-kv1
+spec:
+  running: True
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: ubuntu-kv1
+    spec:
+      domain:
+        cpu:
+          sockets: 1
+          cores: 4
+          threads: 1
+        resources:
+          requests:
+            memory: 8Gi
+            cpu: "4"
+          limits:
+            cpu: "4"
+            memory: 8Gi
+        devices:
+          disks:
+            - name: boot
+              disk:
+                bus: virtio
+            - name: cloudinit
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: fxp
+              bridge: {}
+      volumes:
+        - name: boot
+          dataVolume:
+            name: dv-ubuntu1
+        - name: cloudinit
+          cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              password: juniper123
+              ssh_pwauth: True
+              chpasswd: { expire: False }
+            networkData: |
+              network:
+                version: 1
+                config:
+                - type: physical
+                name: eth0
+                subnets:
+                  -type: dhcp
+      networks:
+        - name: default
+          pod: {}
+        - name: fxp
+          multus:
+            networkName: fxp
