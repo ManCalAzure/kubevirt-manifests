@@ -1,0 +1,54 @@
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: ubuntu-kv2
+spec:
+  running: True
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: ubuntu-kv2
+    spec:
+      domain:
+        cpu:
+          sockets: 1
+          cores: 4
+          threads: 1
+        resources:
+          requests:
+            memory: 8Gi
+            cpu: "4"
+          limits:
+            cpu: "4"
+            memory: 8Gi
+        devices:
+          disks:
+            - name: boot
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: fxp
+              bridge: {}
+            - name: intf1
+              bridge: {}
+            - name: intf3
+              bridge: {}
+      volumes:
+        - name: boot
+          dataVolume:
+            name: dv-ubuntu2
+      networks:
+        - name: default
+          pod: {}
+        - name: fxp
+          multus:
+            networkName: fxp
+        - name: intf1
+          multus:
+            networkName: intf1
+        - name: intf3
+          multus:
+            networkName: intf3
