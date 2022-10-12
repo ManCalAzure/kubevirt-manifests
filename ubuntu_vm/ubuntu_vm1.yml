@@ -10,18 +10,26 @@ spec:
       labels:
         kubevirt.io/vm: ubuntu-kv1
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-worker2
       domain:
         cpu:
           sockets: 1
-          cores: 4
+          cores: 6
           threads: 1
+          #features:
+          #  - name: "ss"
+          #    policy: require
         resources:
           requests:
-            memory: 8Gi
-            cpu: "4"
+            memory: "16Gi"
+            cpu: "6"
           limits:
-            cpu: "4"
-            memory: 8Gi
+            cpu: "6"
+            memory: "16Gi"
+            #memory:
+            #  hugepages:
+            #    pageSize: "1Gi"
         devices:
           disks:
             - name: boot
@@ -30,13 +38,12 @@ spec:
           interfaces:
             - name: default
               masquerade: {}
-              model: virtio
-            - name: fxp
-              bridge: {}
             - name: intf1
               bridge: {}
+              model: virtio
             - name: intf2
               bridge: {}
+              model: virtio
       volumes:
         - name: boot
           dataVolume:
@@ -44,9 +51,6 @@ spec:
       networks:
         - name: default
           pod: {}
-        - name: fxp
-          multus:
-            networkName: fxp
         - name: intf1
           multus:
             networkName: intf1
