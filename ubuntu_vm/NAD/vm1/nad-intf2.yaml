@@ -9,6 +9,7 @@ spec:
     "type": "bridge",
     "bridge": "br2",
     "isGateway": true,
+    "mtu": 9198,
     "ipam": {
      "type": "host-local",
      "subnet": "192.168.8.0/24"
