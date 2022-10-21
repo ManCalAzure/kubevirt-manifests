@@ -1,0 +1,17 @@
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: l3-intf22
+spec:
+  config: '{
+    "cniVersion": "0.3.0",
+    "name": "l3-intf22",
+    "type": "bridge",
+    "bridge": "lrbr22",
+    "isGateway": true,
+    "mtu":9198,
+    "ipam": {
+     "type": "host-local",
+     "subnet": "192.171.2.0/27"
+    }
+}'

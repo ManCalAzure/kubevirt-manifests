@@ -1,0 +1,60 @@
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: jcnr-l3-1
+spec:
+  running: True
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: jcnr-l3-1
+        special: jcnr-l3-1
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-worker2
+      domain:
+        cpu:
+          sockets: 1
+          cores: 6
+          threads: 1
+        resources:
+          requests:
+            memory: "16Gi"
+            cpu: "6"
+          limits:
+            cpu: "6"
+            memory: "16Gi"
+        devices:
+          disks:
+            - name: boot
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: k8s-l3-intf1
+              bridge: {}
+              model: virtio
+            - name: l3-intf11
+              bridge: {}
+              model: virtio
+            - name: l3-intf12
+              bridge: {}
+              model: virtio
+      volumes:
+        - name: boot
+          dataVolume:
+            name: dv-jcnr-l3-1
+      networks:
+        - name: default
+          pod: {}
+        - name: k8s-l3-intf1
+          multus:
+            networkName: k8s-l3-intf1
+        - name: l3-intf11
+          multus:
+            networkName: l3-intf11
+        - name: l3-intf12
+          multus:
+            networkName: l3-intf12

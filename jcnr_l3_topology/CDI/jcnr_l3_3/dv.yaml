@@ -1,0 +1,13 @@
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: dv-jcnr-l3-3
+spec:
+  source:
+      upload: {}
+  pvc:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 150Gi 

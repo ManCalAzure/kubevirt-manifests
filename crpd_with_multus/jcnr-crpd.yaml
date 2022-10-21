@@ -1,0 +1,31 @@
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jcnr-crpd
+  labels:
+    app: jcnr-crpd
+  name: jcnr-crpd
+spec:
+  selector:
+    matchLabels:
+      app: jcnr-crpd
+  template:
+    metadata:
+      labels:
+        app: jcnr-crpd
+      annotations:
+        k8s.v1.cni.cncf.io/networks: '[
+                {"name": "l3-intf11"},
+                {"name": "l3-intf21"},
+                {"name": "l3-intf31"}
+        ]'
+    spec:
+      containers:
+      - image: crpd:22.3R1.1
+        imagePullPolicy: IfNotPresent
+        name: jcnr-crpd
+        securityContext:
+          privileged: true
+      nodeSelector:
+        app: jcnr-crpd
