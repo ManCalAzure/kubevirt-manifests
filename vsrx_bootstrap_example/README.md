@@ -6,6 +6,8 @@ Follow the link [here](https://ard92.github.io/2022/06/06/bootstrap_configs_for_
 Since the bootstrap method needs the whole config present in the container disk. The below script can be used to render the template based on user defined IP addres for fxp0 interface and create the container image.
 The container image would then be referred in the kubevirt manifest file. 
 
+![image](workflow.png)
+
 ```
 (jinja) root@k8s-master:/home/aprabh/kubevirt-manifests/vsrx_bootstrap_example# python render_template.py --help
 usage: render_template.py [-h] [-cname CNAME] [-reg REG] [-fxp FXP]
