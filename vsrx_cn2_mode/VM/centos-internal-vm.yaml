@@ -1,0 +1,88 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  labels:
+    app: centos-internal
+  name: centos-internal
+  namespace: vsrx
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |-
+      [
+        {
+          "name": "right",
+          "namespace": "vsrx",
+          "cni-args": null,
+          "interface": "eth0"
+        }
+      }
+spec:
+  dataVolumeTemplates:
+  - metadata:
+      creationTimestamp: null
+      name: centos-internal-rootdisk
+    spec:
+      source:
+        http:
+          url: http://virt-images.virt-images.svc.cluster.local/centos-stream-9.qcow2
+      storage:
+        accessModes:
+        - ReadWriteMany
+        resources:
+          requests:
+            storage: 30Gi
+        storageClassName: ocs-storagecluster-cephfs
+        volumeMode: Filesystem
+  running: true
+  template:
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: sdnpopv2-ocp-node-master-3
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+          - disk:
+              bus: virtio
+            name: cloudinitdisk
+          - bootOrder: 1
+            disk:
+              bus: virtio
+            name: rootdisk
+          interfaces:
+          - bridge: {}
+            model: virtio
+            name: left
+          networkInterfaceMultiqueue: true
+          rng: {}
+        machine:
+          type: pc-q35-rhel8.4.0
+        resources:
+          requests:
+            memory: 2Gi
+      evictionStrategy: LiveMigrate
+      hostname: centos-internal
+      networks:
+      - name: left
+        multus:
+          networkName: left
+      terminationGracePeriodSeconds: 180
+      volumes:
+      - cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            user: centos
+            password: bobleponge
+            chpasswd:
+              expire: false
+            ssh_authorized_keys:
+              - >-
+                ssh-rsa
+                AAAAB3NzaC1yc2EAAAADAQABAAABgQDjITjI/7ukXucEh39ye96bTLUocsY2zfoytYNmpdgBWBIL0WtLYxwFybLWQt43wJcBDrsZWWOn8EDuE8eC2T2VTxtFmXYdQKANcejnUOEeT9OMVGlwxcPLrwxKtn5JihgX65S0WHlGLOIAWq+T5XqcnJo2lAorEq4538Cvv80kqN6XnYgSHlpRtzqGjAoVhPEwYngggy5OF8/ucRxuszCTNaQ7JkPkpAvPTvtePaB6g4wrzl31T4iYc3pYhBdby4JrBhYwNXwjKZw8yjiP0kfw3wSZl57UZ6Y+gun/3ErH99PvrbksraZUV+rBwZbh3v4sWum6pwUIGiLxs2YJ6+2GyqHB9JZuQpUoFXN2fDiwkz5WpVORqEEl1tTfxs2LavES6x5FPeM6oSjiP+b/AyDU64DY+5Vj0g05TeqSHwkQ2rh7ozGIwPJauz5T93s0Rk5JUmww90HCPh+LBSE7ulRIHXoE0ILlzcIBASNdSmVUiDrv/epR5nbxzHTd7tS2eb8=
+                root@ocptool.ecocenter.fr
+        name: cloudinitdisk
+      - dataVolume:
+          name: centos-internal-rootdisk
+        name: rootdisk
