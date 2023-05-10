@@ -1,0 +1,32 @@
+apiVersion: core.contrail.juniper.net/v3
+kind: Subnet
+metadata:
+  name: right-v4
+  namespace: vsrx
+spec:
+  cidr: 192.168.7.0/24
+  defaultGateway: 192.168.7.1
+  enableDhcp: true
+  ranges:
+  - key: ip-pool-right
+    ipRange:
+    - from: 192.168.7.2
+      to: 192.168.7.100
+---
+apiVersion: core.contrail.juniper.net/v3
+kind: VirtualNetwork
+metadata:
+  namespace: vsrx
+  name: right
+  labels:
+    vn: right
+spec:
+  fabricSNAT: false
+  v4SubnetReference:
+    apiVersion: core.contrail.juniper.net/v1alpha1
+    kind: Subnet
+    namespace: vsrx
+    name: right-v4
+  virtualNetworkProperties:
+    forwardingMode: l2_l3
+    rpf: enable

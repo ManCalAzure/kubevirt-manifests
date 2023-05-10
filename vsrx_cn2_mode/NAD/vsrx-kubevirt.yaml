@@ -1,0 +1,92 @@
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vsrx-cloudinit
+spec:
+  dataVolumeTemplates:
+  - metadata:
+      creationTimestamp: null
+      name: vsrx-boot
+    spec:
+      source:
+        http:
+          url: http://virt-images.virt-images.svc.cluster.local/junos-vsrx3-x86-64-22.4R1.10.qcow2
+      storage:
+        accessModes:
+        - ReadWriteMany
+        resources:
+          requests:
+            storage: 20G
+        storageClassName: ocs-storagecluster-cephfs
+        volumeMode: Filesystem
+  running: True
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: vsrx-cloudinit
+      annotations:
+        k8s.v1.cni.cncf.io/networks: |-
+          [
+            {
+              "name":"fxp",
+              "namespace":"vsrx",
+              "cni-args":null,
+              "interface":"ge-0/0/0"
+            },{
+              "name":"left",
+              "namespace":"vsrx",
+              "cni-args":null,
+              "interface":"ge-0/0/1"
+            },{
+              "name":"right",
+              "namespace":"vsrx",
+              "cni-args":null,
+              "interface":"ge-0/0/2"
+           }
+         ]
+    spec:
+      domain:
+        ioThreadsPolicy: auto
+        cpu:
+          sockets: 1
+          cores: 4
+          threads: 1
+        resources:
+          requests:
+            memory: 8Gi
+            cpu: "4"
+          limits:
+            cpu: "4"
+            memory: 8Gi
+        devices:
+          useVirtioTransitional: true
+          disks:
+            - name: boot
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: fxp
+              bridge: {}
+            - name: left
+              bridge: {}
+            - name: right
+              bridge: {}
+      volumes:
+        - name: boot
+          dataVolume:
+            name: vsrx-boot
+      networks:
+        - name: default
+          pod: {}
+        - name: fxp
+          multus:
+            networkName: fxp
+        - name: left
+          multus:
+            networkName: left
+        - name: right
+          multus:
+            networkName: right

@@ -1,0 +1,37 @@
+apiVersion: core.contrail.juniper.net/v3
+kind: Subnet
+metadata:
+  name: left-v4
+  namespace: vsrx
+spec:
+  cidr: 192.168.6.0/24
+  defaultGateway: 192.168.6.1
+  enableDhcp: true
+  ranges:
+  - key: ip-pool-left
+    ipRange:
+    - from: 192.168.6.2
+      to: 192.168.6.100
+---
+apiVersion: core.contrail.juniper.net/v3
+kind: VirtualNetwork
+metadata:
+  namespace: vsrx
+  name: left
+  labels:
+    vn: left
+spec:
+  fabricSNAT: false
+  v4SubnetReference:
+    apiVersion: core.contrail.juniper.net/v1alpha1
+    kind: Subnet
+    namespace: vsrx
+    name: left-v4
+  routeTableReferences:
+    - apiVersion: core.contrail.juniper.net/v3
+      kind: RouteTable
+      namespace: vsrx
+      name: networkRT
+  virtualNetworkProperties:
+    forwardingMode: l2_l3
+    rpf: enable

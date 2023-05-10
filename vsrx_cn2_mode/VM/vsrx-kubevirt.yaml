@@ -1,0 +1,97 @@
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vsrx-cloudinit
+  namespace: vsrx
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |-
+      [
+        {
+          "interface":"net1",
+          "name":"mgmt",
+          "namespace":"vsrx",
+          "ips":["192.168.5.2"]
+        },{
+          "interface":"net2",
+          "name":"left",
+          "namespace":"vsrx",
+          "ips":["192.168.6.2"]
+        },{
+          "interface":"net3",
+          "name":"right",
+          "namespace":"vsrx",
+          "ips":["192.168.7.2"]
+        }
+      ]
+spec:
+  running: True
+  ### This section requires that the images have been pre-uploaded into a shared web service using OCP
+  ### It should be possible to do this using manually uploaded dataVolumes also
+  dataVolumeTemplates:
+  - metadata:
+      creationTimestamp: null
+      name: vsrx-dv-url
+    spec:
+      source:
+        http:
+          url: http://virt-images.virt-images.svc.cluster.local/junos-vsrx3-x86-64-22.4R1.10.qcow2
+      storage:
+        accessModes:
+        - ReadWriteMany
+        resources:
+          requests:
+            storage: 20G
+        storageClassName: ocs-storagecluster-cephfs
+        volumeMode: Filesystem
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: vsrx-cloudinit
+    spec:
+      domain:
+        ioThreadsPolicy: auto
+        cpu:
+          sockets: 1
+          cores: 4
+          threads: 1
+        resources:
+          requests:
+            memory: 8Gi
+            cpu: "4"
+          limits:
+            cpu: "4"
+            memory: 8Gi
+        devices:
+          ### This setting is required to ensure that the virtio rootdisk works as expected
+          useVirtioTransitional: true
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: mgmt
+              ### For DPDK compute, change `bridge: {}` to `vhostuser: {}`
+              bridge: {}
+            - name: left
+              bridge: {}
+            - name: right
+              bridge: {}
+      volumes:
+        - name: rootdisk
+          dataVolume:
+            name: vsrx-dv-url
+      networks:
+        - name: default
+          pod: {}
+        - name: mgmt
+          multus:
+            networkName: mgmt
+        - name: left
+          multus:
+            networkName: left
+        - name: right
+          multus:
+            networkName: right

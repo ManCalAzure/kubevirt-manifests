@@ -1,0 +1,12 @@
+apiVersion: core.contrail.juniper.net/v3
+kind: RouteTable
+metadata:
+  name: networkRT
+  namespace: vsrx
+spec:
+    routes:
+      route:
+          ### nextHop must be the address of the egress gateway
+        - nextHop: 192.168.6.2
+          nextHopType: ip-address
+          prefix: 0.0.0.0/0
