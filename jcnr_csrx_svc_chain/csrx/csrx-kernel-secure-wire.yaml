@@ -1,0 +1,77 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: csrx
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "net-master",
+          "interface":"eth0",
+          "cni-args": {
+            "mac":"aa:bb:cc:dd:01:12",
+            "interfaceType":"veth",
+            "dataplane":"dpdk",
+            "ipConfig":{
+              "ipv4":{
+                "address":"1.20.1.2/30",
+                "gateway":"1.20.1.1"
+              }
+            }
+          }
+        },
+        {
+          "name": "net-master",
+          "interface":"eth1",
+          "cni-args": {
+            "mac":"aa:bb:cc:dd:01:21",
+            "interfaceType": "veth",
+            "dataplane":"dpdk",
+            "ipConfig":{
+              "ipv4":{
+                "address":"1.21.1.2/30",
+                "gateway":"1.21.1.1"
+              }
+            }
+          }
+        }
+      ]
+spec:
+  containers:
+  - name: csrx1
+    securityContext:
+       privileged: true
+    image: csrx:23.2R1.13
+    imagePullPolicy: IfNotPresent
+    env:
+    - name: CSRX_SIZE
+      value: "large"
+    - name: CSRX_HUGEPAGES
+      value: "no"
+    - name: CSRX_PACKET_DRIVER
+      value: "interrupt"
+    - name: CSRX_FORWARD_MODE
+      value: "wire"
+      #- name: CSRX_AUTO_ASSIGN_IP
+      #value: "yes"
+    - name: CSRX_MGMT_PORT_REORDER
+      value: "yes"
+    - name: CSRX_TCP_CKSUM_CALC
+      value: "yes"
+    - name: CSRX_LICENSE_FILE
+      value: "/var/jail/.csrx_license"
+    - name: CSRX_JUNOS_CONFIG
+      value: "/var/jail/csrx_config"
+    - name: CSRX_CTRL_CPU
+      value: "0x01"
+    - name: CSRX_DATA_CPU
+      value: "0x05"
+    volumeMounts:
+    - name: disk
+      mountPath: "/dev"
+  volumes:
+  - name: disk
+    hostPath:
+      path: /dev
+      type: Directory

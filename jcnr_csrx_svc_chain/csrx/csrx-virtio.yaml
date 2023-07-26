@@ -1,0 +1,90 @@
+# csrx currently doesnt support virtio. But here is an example which can be used in future.
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: csrx-ipsec
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "net-trust",
+          "interface":"eth1",
+          "cni-args": {
+            "mac":"aa:bb:cc:dd:11:12",
+            "interfaceType":"virtio",
+            "rd": "11:11",
+            "dataplane":"dpdk",
+            "ipConfig":{
+              "ipv4":{
+                "address":"1.30.1.2/30",
+                "gateway":"1.30.1.1"
+              }
+            }
+          }
+        },
+        {
+          "name": "net-untrust",
+          "interface":"eth2",
+          "cni-args": {
+            "mac":"aa:bb:cc:dd:11:21",
+            "interfaceType": "virtio",
+            "rd": "10:10",
+            "dataplane":"dpdk",
+            "ipConfig":{
+              "ipv4":{
+                "address":"1.31.1.2/30",
+                "gateway":"1.31.1.1"
+              }
+            }
+          }
+        }
+      ]
+spec:
+  containers:
+  - name: csrx-ipsec
+    securityContext:
+       privileged: true
+    image: csrx:23.3-20230721.0229_RELEASE_233_THROTTLE
+    imagePullPolicy: IfNotPresent
+    env:
+    - name: CSRX_SIZE
+      value: "large"
+    - name: CSRX_HUGEPAGES
+      value: "yes"
+    - name: CSRX_PACKET_DRIVER
+      value: "poll"
+    - name: CSRX_FORWARD_MODE
+      value: "routing"
+    - name: CSRX_AUTO_ASSIGN_IP
+      value: "yes"
+    - name: CSRX_MGMT_PORT_REORDER
+      value: "no"
+    - name: CSRX_TCP_CKSUM_CALC
+      value: "yes"
+    - name: CSRX_LICENSE_FILE
+      value: "/var/jail/.csrx_license"
+    - name: CSRX_JUNOS_CONFIG
+      value: "/var/jail/csrx_config"
+    - name: CSRX_CTRL_CPU
+      value: "0x01"
+    - name: CSRX_DATA_CPU
+      value: "0x05"
+    - name: KUBERNETES_POD_UID
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.uid
+    volumeMounts:
+    - name: disk
+      mountPath: "/dev"
+    - name: dpdk
+      mountPath: /dpdk
+      subPathExpr: $(KUBERNETES_POD_UID)
+  volumes:
+  - name: disk
+    hostPath:
+      path: /dev
+      type: Directory
+  - name: dpdk
+    hostPath:
+      path: /var/run/jcnr/containers

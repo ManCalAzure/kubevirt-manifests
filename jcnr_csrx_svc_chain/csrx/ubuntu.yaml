@@ -1,0 +1,54 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "net-untrust",
+          "interface":"net1@eth1",
+          "cni-args": {
+            "rd":"11:11",
+            "mac":"aa:bb:cc:dd:01:12",
+            "interfaceType":"veth",
+            "dataplane":"dpdk",
+            "ipConfig":{
+              "ipv4":{
+                "address":"1.20.1.2/30",
+                "gateway":"1.20.1.1"
+              }
+            }
+          }
+        },
+        {
+          "name": "net-trust",
+          "interface":"net2@eth2",
+          "cni-args": {
+            "interfaceType":"veth",
+            "rd":"10:10",
+            "mac":"aa:bb:cc:dd:01:21",
+            "dataplane":"dpdk",
+            "ipConfig":{
+              "ipv4":{
+                "address":"1.21.1.2/30",
+                "gateway":"1.21.1.1"
+              }
+            }
+          }
+        }
+      ]
+spec:
+  containers:
+  - name: ub
+    securityContext:
+       privileged: true
+    image: weibeld/ubuntu-networking:latest
+    imagePullPolicy: IfNotPresent
+    command: [ "sleep", "infinity"]
+  volumes:
+  - name: disk
+    hostPath:
+      path: /dev
+      type: Directory
