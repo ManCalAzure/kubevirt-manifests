@@ -5,10 +5,13 @@ apt-get install net-tools
 apt-get install jq -y
 
 # Enable kernel modules
+#adds overlay filesystem support needed for k8 pod network abstraction.
 sudo modprobe overlay
+
+#Module enables bridge netfilter needed for k8 networking and policy. 
 sudo modprobe br_netfilter
 
-# Add some settings to sysctl
+#Enabling IP forwarding in Kernel
 sudo tee /etc/sysctl.d/kubernetes.conf<<EOF
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
@@ -18,6 +21,7 @@ EOF
 # Reload sysctl
 sudo sysctl --system
 
+#Installing Docker
 echo "Installing docker"
 apt-get update
 apt-get install -y \
@@ -54,6 +58,7 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 sudo systemctl enable docker
 
+#Install Kubernetes
 echo "Installing Kubernetes"
 apt-get update && apt-get install -y apt-transport-https
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
@@ -62,15 +67,17 @@ deb http://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 apt-get update
 
-#Kubernets version 1.24.0 is working properly, downgrading to 1.23.0
+#Kubernetes install specific version 1.23.0
 apt-get install -qy kubelet=1.23.0-00 kubeadm=1.23.0-00 kubectl=1.23.0-00 --allow-downgrades
 
 kubeadm version
 kubeadm config images pull
 
+#Turning swap off
 sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 sudo swapoff -a
 
+#Ensuring kubet auto starts on boot-up.
 sudo systemctl enable kubelet
 
 kubeadm init --pod-network-cidr=10.244.0.0/16
@@ -78,7 +85,7 @@ mkdir -p "$HOME"/.kube
 sudo cp -i /etc/kubernetes/admin.conf "$HOME"/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-# Install flannel 
+# Install flannel - https://github.com/flannel-io/flannel - networking for Kubernetes - makes easy creation of l3 fabric for K8s. Flanneld runs in each host/allocates subnets...
 kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
 
 # shellcheck disable=SC2181
@@ -101,9 +108,9 @@ curl https://baltocdn.com/helm/signing.asc | apt-key add - \
 	&& helm repo add stable https://charts.helm.sh/stable
 
 #Installing python
-apt-get install python3 -y
+åapt-get install python3 -y
 apt-get install python3-pip -y
 
-# Install multus
+# Install multus - for supporting container with more than a single interface
 git clone https://github.com/k8snetworkplumbingwg/multus-cni.git && cd multus-cni
 cat ./deployments/multus-daemonset-thick.yml | kubectl apply -f -
